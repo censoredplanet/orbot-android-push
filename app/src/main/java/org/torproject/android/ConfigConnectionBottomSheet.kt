@@ -166,19 +166,20 @@ class ConfigConnectionBottomSheet(private val callbacks: ConnectionHelperCallbac
         btnAskTor.setCompoundDrawablesWithIntrinsicBounds(dLeft, null, null, null)
 
         val countryCodeValue: String? = getDeviceCountryCode(requireContext())
+        Log.d("bim", "The country code is $countryCodeValue")
 
         CircumventionApiManager().getSettings(SettingsRequest(countryCodeValue), {
             it?.let {
                 circumventionApiBridges = it.settings
                 if (circumventionApiBridges == null) {
-                    //Log.d("bim", "settings is null, we can assume a direct connect is fine ")
+                    Log.d("bim", "settings is null, we can assume a direct connect is fine ")
                     rbDirect.isChecked = true;
 
                 } else {
 
-                   // Log.d("bim", "settings is $circumventionApiBridges")
+                    Log.d("bim", "settings is $circumventionApiBridges")
                     circumventionApiBridges?.forEach { b->
-                     //   Log.d("bim", "BRIDGE $b")
+                        Log.d("bim", "BRIDGE $b")
                     }
 
                     //got bridges, let's set them
@@ -231,6 +232,8 @@ class ConfigConnectionBottomSheet(private val callbacks: ConnectionHelperCallbac
                 rbDirect.isChecked = true
                 btnAskTor.text = getString(R.string.connection_direct)
 
+                Log.d("bim", "smart connect: Direct is chosen")
+
                 return
             }
             val b = it[circumventionApiIndex]!!.bridges
@@ -238,6 +241,8 @@ class ConfigConnectionBottomSheet(private val callbacks: ConnectionHelperCallbac
                 Prefs.putConnectionPathway(Prefs.PATHWAY_SNOWFLAKE)
                 rbSnowflake.isChecked = true
                 btnAskTor.text = getString(R.string.connection_snowflake)
+
+                Log.d("bim", "smart connect: Snowflake is chosen")
 
             } else if (b.type == CircumventionApiManager.BRIDGE_TYPE_OBFS4) {
 
@@ -251,10 +256,15 @@ class ConfigConnectionBottomSheet(private val callbacks: ConnectionHelperCallbac
                 Prefs.setBridgesList(bridgeStrings)
                 Prefs.putConnectionPathway(Prefs.PATHWAY_CUSTOM)
 
+                Log.d("bim", "smart connect: Custom is chosen with bridges")
+                Log.d("bim", "smart connect: bridgeStrings: $bridgeStrings")
+
             }
             else
             {
                 rbDirect.isChecked = true
+
+                Log.d("bim", "smart connect: Falling back to Direct")
             }
 
             circumventionApiIndex += 1
