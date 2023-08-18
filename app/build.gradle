@@ -1,6 +1,7 @@
 apply from: "../commons-device.gradle"
 apply plugin: 'kotlin-android'
 apply from : '../dependencies.gradle'
+apply plugin: 'com.google.gms.google-services'
 
 /* gets the version name from the latest Git tag, stripping the leading v off */
 def getVersionName = { ->
@@ -124,4 +125,8 @@ dependencies {
     //root detection
     implementation 'com.scottyab:rootbeer-lib:0.1.0'
 
+    // Import the BoM for the Firebase platform
+    implementation platform('com.google.firebase:firebase-bom:32.2.2')
+    implementation 'com.google.firebase:firebase-messaging-ktx'
+    // implementation 'com.google.firebase:firebase-messaging'
 }

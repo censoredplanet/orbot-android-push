@@ -79,3 +79,6 @@ app/src/main/libs/
 # Fastlane
 /fastlane/report.xml
 /fastlane/README.md
+
+# Firebase Android configuration file (for FCM)
+/app/google-services.json
