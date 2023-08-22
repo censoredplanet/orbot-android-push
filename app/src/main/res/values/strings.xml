@@ -243,6 +243,9 @@
     <string name="get_a_bridge_subtitle">Cloaks your traffic. Gets around some Tor blocking.</string>
     <string name="custom_bridge">Custom Bridge</string>
     <string name="custom_bridge_subtitle">Most likely to keep you connected if Tor is severely blocked. Requires a bridge address from someone you trust.</string>
+    <string name="push_subscribe">Push notification</string>
+    <string name="push_subscribe_subtitle">Subscribe to push notifications to get constant</string>
+    <string name="push_subscribe_description">Use push notification to subscribe to bridges and gets updated automatically with the latest bridges information. You phone must have Google services installed to use this feature.</string>
     <string name="connect">Connect</string>
     <string name="next">Next</string>
     <string name="solve_captcha">Solve Captcha</string>
