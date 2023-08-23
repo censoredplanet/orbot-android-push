@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+
 	"github.com/censoredplanet/orbot-android-push/PushBridge-server/fcmsender"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 // for simplicity, I use global variables here (not the best practice)
@@ -44,41 +45,22 @@ func main() {
 
 	router := gin.Default()
 
-	//// These two routes are for debugging
-	//router.GET("/bridges", getAllBridges)
-	//router.GET("/bridges/:country", getBridgesByCountry)
-	//
-	//// Android Apps will register their tokens here
-	//router.POST("/fcm/register", registerFCM)
-	//
-	//// admin APIs
-	//router.POST("/admin/bridges/update", updateBridgesUsingMOAT)
-	//router.POST("/admin/bridges/set", updateBridgesManually)
-	//router.POST("/admin/fcm/post", notifyFCM)
+	// These two routes are for debugging
+	router.GET("/bridges", getAllBridges)
+	router.GET("/bridges/:country", getBridgesByCountry)
+
+	// Android Apps will register their tokens here
+	router.POST("/fcm/register", registerFCM)
+
+	// admin APIs
+	router.POST("/admin/bridges/update", updateBridgesUsingMOAT)
+	router.POST("/admin/bridges/set", updateBridgesManually)
+	router.POST("/admin/fcm/post", notifyFCM)
 
 	// Run the server
-	err = router.Run(":8080")
+	err = router.Run("0.0.0.0:8888")
 	if err != nil {
 		log.Fatalf("Error running Gin server: %v", err)
 		return
 	}
 }
-
-//func sendFeed(url string, fcmsender *fcmsender.FCMSender, tokens []string) error {
-//	// TODO: fountain codes here. Maybe add in other metadata (e.g. time/sequence number/...)
-//	// Here is how we turn the raw RSS data into packets (i.e. how we are a transport protocol)
-//	data, length := getDataPayload(url)
-//	if length == 0 || length > 2800 {
-//		// TODO: Support sending slices of a large file through FCM
-//		return errPacketTooLarge
-//	}
-//
-//	var wg sync.WaitGroup
-//	wg.Add(len(tokens))
-//	for _, token := range tokens {
-//		fcmsender.SendTo(data, token, &wg)
-//	}
-//	wg.Wait()
-//
-//	return nil
-//}
