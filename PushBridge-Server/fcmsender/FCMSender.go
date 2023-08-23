@@ -4,7 +4,6 @@ import (
 	"context"
 	"firebase.google.com/go"
 	"firebase.google.com/go/messaging"
-	"fmt"
 	"google.golang.org/api/option"
 	"log"
 	"sync"
@@ -19,14 +18,14 @@ type FCMSender struct {
 // wg.Done() upon finish
 func (c *FCMSender) SendTo(data map[string]string, token string, wg *sync.WaitGroup) {
 
-	// TODO: Ye Shu: do we need TTL=0 for PushRSS? These messages should be latency-friendly and do not become out-of-date frequently?
-	headers := map[string]string{}
-	headers["ttl"] = fmt.Sprint(0)
+	// Ye Shu: do we need TTL=0 for PushRSS? These messages should be latency-friendly and do not become out-of-date frequently?
+	//headers := map[string]string{}
+	//headers["ttl"] = fmt.Sprint(0)
 
 	message := &messaging.Message{
-		Webpush: &messaging.WebpushConfig{
-			Headers: headers,
-		},
+		//Webpush: &messaging.WebpushConfig{
+		//	Headers: headers,
+		//},
 		Data:  data,
 		Token: token,
 	}
