@@ -1,13 +1,17 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/censoredplanet/orbot-android-push/PushBridge-server/fcmsender"
-	_ "github.com/mattn/go-sqlite3"
-	"sync"
+	"github.com/gin-gonic/gin"
+	"log"
+)
+
+// for simplicity, I use global variables here (not the best practice)
+var (
+	fcmDB     *FCMDB
+	fcmSender *fcmsender.FCMSender
 )
 
 func main() {
@@ -26,51 +30,55 @@ func main() {
 		return
 	}
 
-	sender := fcmsender.NewFCMSender(credsFilename)
+	// sender
+	fcmSender = fcmsender.NewFCMSender(credsFilename)
 
-	db, err := sql.Open("sqlite3", dbPath)
+	// DB
+	var err error
+	fcmDB, err = NewFCMDB(dbPath)
 	if err != nil {
-		fmt.Println("Failed to open database:", err)
+		log.Fatalf("Cannot open database: %v\n", err)
 		return
 	}
-	defer db.Close()
-	fcmdb := NewFCMDB(db)
+	defer fcmDB.Close()
 
-	if !isExist(dbPath) {
-		if fcmdb.InitializeTables() != nil {
-			fmt.Println("Failed to initialize database:", err)
-		}
-	}
+	router := gin.Default()
 
-	// Read user subscription into DB
-	InputJSONToDB("exampleSubscription.json", fcmdb)
+	//// These two routes are for debugging
+	//router.GET("/bridges", getAllBridges)
+	//router.GET("/bridges/:country", getBridgesByCountry)
+	//
+	//// Android Apps will register their tokens here
+	//router.POST("/fcm/register", registerFCM)
+	//
+	//// admin APIs
+	//router.POST("/admin/bridges/update", updateBridgesUsingMOAT)
+	//router.POST("/admin/bridges/set", updateBridgesManually)
+	//router.POST("/admin/fcm/post", notifyFCM)
 
-	// Send RSS feed through FCM
-	for _, subscription := range fcmdb.GetSubscriptions() {
-		err = sendFeed(subscription.url, sender, fcmdb.GetUserTokens(subscription.subscribed_users))
-		if err != nil {
-			fmt.Println("WARN: error while sending feed. SKIP", err)
-		}
+	// Run the server
+	err = router.Run(":8080")
+	if err != nil {
+		log.Fatalf("Error running Gin server: %v", err)
+		return
 	}
 }
 
-func sendFeed(url string, fcmsender *fcmsender.FCMSender, tokens []string) error {
-	// TODO: fountain codes here. Maybe add in other metadata (e.g. time/sequence number/...)
-	// Here is how we turn the raw RSS data into packets (i.e. how we are a transport protocol)
-	data, length := getDataPayload(url)
-	if length == 0 || length > 2800 {
-		// TODO: Support sending slices of a large file through FCM
-		return errPacketTooLarge
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(len(tokens))
-	for _, token := range tokens {
-		fcmsender.SendTo(data, token, &wg)
-	}
-	wg.Wait()
-
-	return nil
-}
-
-var errPacketTooLarge = errors.New("packet Exceeds Max FCM Packet Size (4000 bytes)")
+//func sendFeed(url string, fcmsender *fcmsender.FCMSender, tokens []string) error {
+//	// TODO: fountain codes here. Maybe add in other metadata (e.g. time/sequence number/...)
+//	// Here is how we turn the raw RSS data into packets (i.e. how we are a transport protocol)
+//	data, length := getDataPayload(url)
+//	if length == 0 || length > 2800 {
+//		// TODO: Support sending slices of a large file through FCM
+//		return errPacketTooLarge
+//	}
+//
+//	var wg sync.WaitGroup
+//	wg.Add(len(tokens))
+//	for _, token := range tokens {
+//		fcmsender.SendTo(data, token, &wg)
+//	}
+//	wg.Wait()
+//
+//	return nil
+//}
