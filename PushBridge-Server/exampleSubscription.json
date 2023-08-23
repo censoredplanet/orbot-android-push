@@ -1,0 +1,9 @@
+{
+    "key":"MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyD23Ty2DkbY06fEcj1t6GmDw335ZO1c7HMFVVBfXXhRgcULE/Ul0CkfpH+cGz3YC7ndBnW7Wx+PM4kzuiCsJwLkpTWSgYS+VxomZTcCQ+SuGMfyHjLu4h4acY0gToIw4c1QPoRa1Zhs1lj6BJt95T57nuREVuikawMdBMAJFxxf6lbxPQr2ncWFSJVFPlJXw9j9hRLwIzO5edtkBHUlaUW78FQtdoW0scgDN1jHsVgzIuIM0utcdZe1IDLudjv426seAoGGsXgZ0WBnOY8M5zNQjMOHAvjzCNXduNd4bdkUaSQRkRTF8qOBWsYNuU63QaOHp6jyJmdlNPmACMcoDSQIDAQAB",
+    "subscription":[
+        "http://rss.cnn.com/rss/cnn_topstories.rss",
+        "https://diwenx.com/assets/files/example.xml",
+        "https://rss.nytimes.com/services/xml/rss/nyt/World.xml"
+    ],
+    "token":"eFwGBDAe3l0:APA91bEtZQvtx2sNBmjfbJzWEgVPAZ8t5Z_9hqJ6YZ2o5ewTb93sp38G51hDiMiaOlJuw5T7A_YJNdf6HgXVMU-Y0-zt0rBOo3oGa_MjDfyDUlUa8V6sZ9iFMOEybHWQVYCD-rt5GOhu"
+}
