@@ -1,7 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 
 	"github.com/censoredplanet/orbot-android-push/PushBridge-server/models"
 	"github.com/gin-gonic/gin"
@@ -55,7 +61,7 @@ func getBridgesByCountry(c *gin.Context) {
 	})
 
 	if result.Error != nil {
-		if result.Error == gorm.ErrRecordNotFound {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			c.JSON(404, models.ServerErrorResponse{
 				Message: "Not Found",
 				Error:   result.Error.Error(),
@@ -79,9 +85,58 @@ func getBridgesByCountry(c *gin.Context) {
 
 // TODO: implement this
 func registerFCM(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"message": "pong",
-	})
+	// cast body to models.RegisterFCMRequest
+	var request models.RegisterFCMRequest
+	err := c.ShouldBindJSON(&request)
+	if err != nil {
+		c.JSON(400, models.ServerErrorResponse{
+			Message: "Bad Request",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	// check if country exists in database, if not, set to "default"
+	var country models.Country
+	result := fcmDB.db.First(&country, "country_code = ?", strings.ToLower(request.Country))
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			country = models.Country{
+				CountryCode: "default",
+			}
+		} else {
+			c.JSON(500, models.ServerErrorResponse{
+				Message: "Internal Server Error while looking up country",
+				Error:   result.Error.Error(),
+			})
+			return
+		}
+	}
+
+	// upsert the user
+	user := models.User{
+		FCMToken: request.FCMToken,
+		Country:  country,
+	}
+	result = fcmDB.db.Create(&user)
+
+	if result.Error != nil {
+		c.JSON(500, models.ServerErrorResponse{
+			Message: "Internal Server Error while creating user",
+			Error:   result.Error.Error(),
+		})
+		return
+	}
+
+	if result.RowsAffected > 0 {
+		c.JSON(200, models.MessageResponse{
+			Message: "Updated",
+		})
+	} else {
+		c.JSON(200, models.MessageResponse{
+			Message: "Already Exists. Not Updated",
+		})
+	}
 }
 
 // TODO: implement this
@@ -135,7 +190,7 @@ func updateBridgesManually(c *gin.Context) {
 		})
 	} else {
 		c.JSON(200, models.MessageResponse{
-			Message: "Not Updated",
+			Message: "Already Exists. Not Updated",
 		})
 	}
 }
@@ -165,3 +220,22 @@ func notifyFCM(c *gin.Context) {
 //
 //	return nil
 //}
+
+func RequestLoggerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Read the request body
+		body, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to read request body"})
+			c.Abort()
+			return
+		}
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
+
+		// Log the request body
+		fmt.Printf("Request Body: %s\n", body)
+
+		// Continue processing the request
+		c.Next()
+	}
+}

@@ -50,11 +50,11 @@ func main() {
 	router.GET("/bridges/:country", getBridgesByCountry)
 
 	// Android Apps will register their tokens here
-	router.POST("/fcm/register", registerFCM)
+	router.POST("/fcm/register", RequestLoggerMiddleware(), registerFCM)
 
 	// admin APIs
 	router.POST("/admin/bridges/update", updateBridgesUsingMOAT)
-	router.POST("/admin/bridges/set", updateBridgesManually)
+	router.POST("/admin/bridges/set", RequestLoggerMiddleware(), updateBridgesManually)
 	router.POST("/admin/fcm/post", notifyFCM)
 
 	// Run the server
