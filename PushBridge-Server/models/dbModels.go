@@ -1,20 +1,16 @@
 package models
 
-import (
-	"github.com/google/uuid"
-)
-
 type User struct {
 	ModelUsingUUID
 	FCMToken string `json:"token"` // FCM deviceToken that identifies a device
 
 	// `User` belongs to `Country`, `CountryID` is the foreign key
 	Country   Country
-	CountryID uuid.UUID
+	CountryID string
 }
 
 type Country struct {
-	CountryCode   string `gorm:"primarykey" json:"code"`
+	CountryCode   string `gorm:"primaryKey" json:"code"`
 	BridgeSetting string // for simplicity, we'll just forward the settings JSON as a string for now
 	ModelWithoutID
 }
