@@ -83,7 +83,16 @@ func getBridgesByCountry(c *gin.Context) {
 	})
 }
 
-// TODO: implement this
+// RegisterFCM registers a user's FCM token and country
+// @Summary Register a user's FCM token and country
+// @Tags fcm
+// @Accept json
+// @Produce json
+// @Param body body RegisterFCMRequest true "Request Body"
+// @Router /fcm/register [post]
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ServerErrorResponse
+// @Failure 500 {object} ServerErrorResponse
 func registerFCM(c *gin.Context) {
 	// cast body to models.RegisterFCMRequest
 	var request models.RegisterFCMRequest
@@ -137,6 +146,9 @@ func registerFCM(c *gin.Context) {
 			Message: "Already Exists. Not Updated",
 		})
 	}
+
+	// start a goroutine to send the user the bridges
+	go sendBridgeSettingsToUser(user)
 }
 
 // TODO: implement this
@@ -195,31 +207,68 @@ func updateBridgesManually(c *gin.Context) {
 	}
 }
 
-// TODO: implement this
-func notifyFCM(c *gin.Context) {
+// notifyFCMByToken sends a notification to a specific user according to their UUID
+// @Summary Send a notification to a specific user according to their UUID, containing the bridges for their country
+// @Tags admin
+// @Produce json
+// @Param body body NotifyFCMByTokenRequest true "Request Body"
+// @Router /admin/fcm/postUser [post]
+// @Success 200 {object} MessageResponse
+// @Failure 400 {object} ServerErrorResponse
+// @Failure 404 {object} ServerErrorResponse
+// @Failure 500 {object} ServerErrorResponse
+func notifyFCMByToken(c *gin.Context) {
+	// cast body to models.NotifyFCMByTokenRequest
+	var request models.NotifyFCMByTokenRequest
+	err := c.ShouldBindJSON(&request)
+
+	if err != nil {
+		c.JSON(400, models.ServerErrorResponse{
+			Message: "Bad Request",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	// get the user
+	var user models.User
+	result := fcmDB.db.First(&user, "id = ?", request.UserID)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			c.JSON(404, models.ServerErrorResponse{
+				Message: "User Not Found",
+				Error:   result.Error.Error(),
+			})
+			return
+		}
+		c.JSON(500, models.ServerErrorResponse{
+			Message: "Internal Server Error",
+			Error:   result.Error.Error(),
+		})
+		return
+	}
+
+	// send the user the bridges
+	err = sendBridgeSettingsToUser(user)
+	if err != nil {
+		c.JSON(500, models.ServerErrorResponse{
+			Message: "Internal Server Error",
+			Error:   err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, models.MessageResponse{
+		Message: "Sent",
+	})
+}
+
+// TODO: implement this. Need to change ORM relationship
+func notifyFCMByCountry(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "pong",
 	})
 }
-
-//func sendFeed(url string, fcmsender *fcmsender.FCMSender, tokens []string) error {
-//	// TODO: fountain codes here. Maybe add in other metadata (e.g. time/sequence number/...)
-//	// Here is how we turn the raw RSS data into packets (i.e. how we are a transport protocol)
-//	data, length := getDataPayload(url)
-//	if length == 0 || length > 2800 {
-//		// TODO: Support sending slices of a large file through FCM
-//		return errPacketTooLarge
-//	}
-//
-//	var wg sync.WaitGroup
-//	wg.Add(len(tokens))
-//	for _, token := range tokens {
-//		fcmsender.SendTo(data, token, &wg)
-//	}
-//	wg.Wait()
-//
-//	return nil
-//}
 
 func RequestLoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {

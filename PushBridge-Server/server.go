@@ -55,7 +55,8 @@ func main() {
 	// admin APIs
 	router.POST("/admin/bridges/update", updateBridgesUsingMOAT)
 	router.POST("/admin/bridges/set", RequestLoggerMiddleware(), updateBridgesManually)
-	router.POST("/admin/fcm/post", notifyFCM)
+	router.POST("/admin/fcm/postUser", notifyFCMByToken)
+	router.POST("/admin/fcm/postCountry", notifyFCMByCountry)
 
 	// Run the server
 	err = router.Run("0.0.0.0:8888")

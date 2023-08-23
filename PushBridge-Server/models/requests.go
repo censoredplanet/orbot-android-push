@@ -11,3 +11,11 @@ type RegisterFCMRequest struct {
 	FCMToken string `json:"token"`
 	Country  string `json:"country"`
 }
+
+type NotifyFCMByTokenRequest struct {
+	UserID string `json:"userID"` // the UUID of the user
+}
+
+type NotifyFCMByCountryRequest struct {
+	CountryCode string `json:"country" example:"us"` // ISO 3166-2 codes (e.g. us)
+}
