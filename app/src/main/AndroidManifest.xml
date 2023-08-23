@@ -44,7 +44,9 @@
         tools:replace="android:allowBackup"
         android:hasFragileUserData="false"
         android:taskAffinity=""
+        android:networkSecurityConfig="@xml/network_security_config"
         >
+        <!-- The networkSecurityConfig is for allowing HTTP communication in Android Virtual Device to host -->
 
         <activity android:name=".OrbotActivity"
             android:excludeFromRecents="false"
