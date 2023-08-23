@@ -4,6 +4,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +17,7 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
 import org.torproject.android.service.util.Prefs
+
 
 // TODO: make this bottom sheet a place for getting permissions and confirming subscriptions.
 class PushBridgeBottomSheet(private val callbacks: ConnectionHelperCallbacks): OrbotBottomSheetDialogFragment() {
@@ -108,6 +111,9 @@ class PushBridgeBottomSheet(private val callbacks: ConnectionHelperCallbacks): O
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // to post a Runnable to the main thread's message queue, avoiding CalledFromWrongThreadException
+        val mainHandler = Handler(Looper.getMainLooper())
+
         val v =  inflater.inflate(R.layout.push_bridge_bottom_sheet, container, false)
         v.findViewById<View>(R.id.tvCancel).setOnClickListener { dismiss() }
 
@@ -131,6 +137,42 @@ class PushBridgeBottomSheet(private val callbacks: ConnectionHelperCallbacks): O
 //        if (!bridges.contains(bridgeStatement)) bridges = ""
 //        etBridges.setText(bridges)
 //        updateUi()
+
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            // FCM SDK (and your app) can post notifications.
+            btnRequestPermission.isEnabled = false
+            btnRequestPermission.text = "Notifications Enabled ✔"
+
+            FirebaseMessaging.getInstance().token.addOnCompleteListener(OnCompleteListener { task ->
+                if (!task.isSuccessful) {
+                    Log.w(TAG, "Fetching FCM registration token failed", task.exception)
+
+                    // TODO: display a toast for error?
+                    return@OnCompleteListener
+                }
+
+                // Get new FCM registration token
+                val token = task.result
+
+                // Log and toast
+                Log.d(TAG, token)
+
+                // Send the token to web server
+                // TODO: check if has already been initialized?
+                MyFirebaseMessagingService.sendRegistrationToServer(token, {
+                    mainHandler.post { // Update UI elements here
+                        etBridges.setText("Registered with server successfully. Awaiting bridges to be posted")
+                    }
+                    // TODO: create channel and wait for message to be received. Then set the bridges
+                }, {
+                    mainHandler.post { // Update UI elements here
+                        etBridges.setText("Cannot register with server. Please try registering out of band with the following token:\n$token")
+                    }
+                })
+            })
+        }
 
         Log.d(TAG, "initialized")
         return v

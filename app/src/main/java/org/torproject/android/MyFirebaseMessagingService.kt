@@ -23,32 +23,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         sendRegistrationToServer(token)
     }
 
-    private fun sendRegistrationToServer(token: String) {
-        // this is the computer's address in Android Virtual Machine
-        val url = "http://10.0.2.2:8888"
-        val client = OkHttpClient()
-        val requestBody = FormBody.Builder()
-            .add("token", token)
-            .add("country", "us")
-            .build()
-
-        val request = Request.Builder()
-            .url(url)
-            .post(requestBody)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "Failed to send token to server: ${e.message}")
-                // TODO: handle the error, e.g. display user notification?
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                Log.d(TAG, "Token sent to server successfully")
-            }
-        })
-    }
-
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         // ...
 
@@ -82,5 +56,37 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "push-notification"
+
+        fun sendRegistrationToServer(
+            token: String,
+            callbackIfSuccess: (() -> Unit)? = null,
+            callbackIfFail: (() -> Unit)? = null
+        ) {
+            // this is the computer's address in Android Virtual Machine
+            val url = "http://10.0.2.2:8888"
+            val client = OkHttpClient()
+            val requestBody = FormBody.Builder()
+                .add("token", token)
+                .add("country", "us")
+                .build()
+
+            val request = Request.Builder()
+                .url(url)
+                .post(requestBody)
+                .build()
+
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e(TAG, "Failed to send token to server: ${e.message}")
+                    // TODO: handle the error, e.g. display user notification?
+                    callbackIfFail?.invoke()
+                }
+
+                override fun onResponse(call: Call, response: Response) {
+                    Log.d(TAG, "Token sent to server successfully")
+                    callbackIfSuccess?.invoke()
+                }
+            })
+        }
     }
 }
