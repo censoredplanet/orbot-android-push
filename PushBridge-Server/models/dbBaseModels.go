@@ -1,9 +1,10 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
-	"time"
 )
 
 // ModelUsingUUID is like gorm.Model but with ID field changed to uuid.UUID

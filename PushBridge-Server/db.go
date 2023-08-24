@@ -1,10 +1,11 @@
 package main
 
 import (
+	"log"
+
 	"github.com/censoredplanet/orbot-android-push/PushBridge-server/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"log"
 )
 
 // FCMDB stores the users, their FCM identifiers, pubkeys, and their subscriptions

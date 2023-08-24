@@ -126,6 +126,8 @@ func registerFCM(c *gin.Context) {
 		}
 	}
 
+	// TODO: how is FCMToken formatted? Can we deduplicate it? Currently one device results in different tokens each time
+
 	// upsert the user
 	user := models.User{
 		FCMToken: request.FCMToken,

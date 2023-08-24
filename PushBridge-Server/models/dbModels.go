@@ -10,7 +10,7 @@ type User struct {
 }
 
 type Country struct {
-	CountryCode   string `gorm:"primaryKey" json:"code"`
+	CountryCode   string `gorm:"primaryKey" json:"code"` // ISO 3166-2 codes (e.g. us)
 	BridgeSetting string // for simplicity, we'll just forward the settings JSON as a string for now
 	ModelWithoutID
 }

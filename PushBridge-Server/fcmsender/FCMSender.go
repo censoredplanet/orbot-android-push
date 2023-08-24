@@ -2,11 +2,12 @@ package fcmsender
 
 import (
 	"context"
+	"log"
+	"sync"
+
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
 	"google.golang.org/api/option"
-	"log"
-	"sync"
 )
 
 type FCMSender struct {
@@ -33,7 +34,15 @@ func (c *FCMSender) SendTo(data map[string]string, token string, wg *sync.WaitGr
 	go func() {
 		_, err := c.fcmServer.Send(c.ctx, message)
 		if err != nil {
-			log.Fatalf("fcm send error: %v", err)
+			if messaging.IsQuotaExceeded(err) {
+				log.Printf("fcm send quota exceeded: %v", err)
+				// TODO: handle this. How?
+			} else if messaging.IsUnregistered(err) {
+				log.Printf("fcm send token invalid: %v", err)
+				// TODO: delete this token
+			} else {
+				log.Printf("fcm send error unhandled: %v", err)
+			}
 		}
 		wg.Done()
 	}()
