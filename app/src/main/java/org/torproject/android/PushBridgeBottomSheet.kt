@@ -14,8 +14,12 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import org.torproject.android.service.util.Prefs
 
 
@@ -129,6 +133,7 @@ class PushBridgeBottomSheet(private val callbacks: ConnectionHelperCallbacks): O
             callbacks.tryConnecting()
             closeAllSheets()
         }
+        btnAction.isEnabled = false
 
         // TODO: maybe use the textfield for out-of-band initialization?
         etBridges = v.findViewById(R.id.etBridges)
@@ -163,9 +168,37 @@ class PushBridgeBottomSheet(private val callbacks: ConnectionHelperCallbacks): O
                 // TODO: check if has already been initialized?
                 MyFirebaseMessagingService.sendRegistrationToServer(token, {
                     mainHandler.post { // Update UI elements here
-                        etBridges.setText("Registered with server successfully. Awaiting bridges to be posted")
+                        etBridges.setText("Registered with server successfully. Awaiting bridges to be posted via push notification")
+
+                        // use channel to wait for push messages. before then, user cannot proceed
+                        MyFirebaseMessagingService.waitingChannel = Channel()
+                        Log.d(TAG, "channel set. waiting " + MyFirebaseMessagingService.waitingChannel)
+                        // TODO: why does runBlocking here result in Application Not Responding?
+                        // How does switching to this fix the issue?
+                        lifecycleScope.launch(Dispatchers.Main) {
+                            launch {
+                                val channel = MyFirebaseMessagingService.waitingChannel
+
+                                if (channel == null) {
+                                    // TODO: error. race condition? display error toast and go back?
+                                    Log.w(TAG, "channel is null. race condition?")
+                                    return@launch
+                                }
+
+                                Log.d(TAG, "channel wait to receive")
+                                // TODO: add a timeout and prompt user to change method?
+                                val selectedMethod = channel.receive()
+                                Log.d(TAG, "channel receive successful")
+                                channel.close()
+                                MyFirebaseMessagingService.waitingChannel = null
+
+                                // bridges will be set in MyFirebaseMessaingService
+                                etBridges.setText("Registered with server successfully. Bridges received via push notification. You're all set! Instructed Method: " + selectedMethod)
+                                btnAction.isEnabled = true
+                            }
+                        }
+
                     }
-                    // TODO: create channel and wait for message to be received. Then set the bridges
                 }, {
                     mainHandler.post { // Update UI elements here
                         etBridges.setText("Cannot register with server. Please try registering out of band with the following token:\n$token")
