@@ -36,6 +36,10 @@ func getAllBridges(c *gin.Context) {
 
 	var allBridges = make(models.AllBridgeSettingResponse, len(countries))
 	for _, country := range countries {
+		// work around "unexpected end of JSON input" error when field is empty
+		if len(country.BridgeSetting) == 0 {
+			country.BridgeSetting = "[]"
+		}
 		allBridges[country.CountryCode] = models.BridgeSettingsResponseFragment{
 			Settings: json.RawMessage(country.BridgeSetting),
 		}

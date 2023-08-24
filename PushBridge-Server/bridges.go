@@ -9,13 +9,20 @@ import (
 func sendBridgeSettingsToUser(user models.User) error {
 	// get the bridges
 	// TODO: what if user.Country is null?
-	bridgeSettings := getBridgeSettings(user.Country)
+	bridgeSettings := models.BridgeSettingsResponseFragment{
+		Settings: json.RawMessage(getBridgeSettings(user.Country)),
+	}
 
 	var wg sync.WaitGroup
 	wg.Add(1)
 
+	bridgeSettingsString, err := json.Marshal(bridgeSettings)
+	if err != nil {
+		return err
+	}
+
 	payload := map[string]string{
-		"settings": bridgeSettings,
+		"payload": string(bridgeSettingsString),
 	}
 
 	// check length of payload
