@@ -236,9 +236,10 @@ func notifyFCMByToken(c *gin.Context) {
 		return
 	}
 
-	// get the user
+	// get the user, preloading user.Country
 	var user models.User
-	result := fcmDB.db.First(&user, "id = ?", request.UserID)
+	result := fcmDB.db.Preload("Country").First(&user, "id = ?", request.UserID)
+
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			c.JSON(404, models.ServerErrorResponse{

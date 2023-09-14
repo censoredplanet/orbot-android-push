@@ -7,6 +7,8 @@ import (
 	"github.com/censoredplanet/orbot-android-push/PushBridge-server/models"
 )
 
+// sendBridgeSettingsToUser sends the bridge settings to the user
+// note that user.Country must be populated
 func sendBridgeSettingsToUser(user models.User) error {
 	// get the bridges
 	// TODO: what if user.Country is null?
